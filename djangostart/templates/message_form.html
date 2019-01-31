@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+</head>
+<body>
+<p class="test">form there</p>
+<form action="{% url 'go_form' %}" method="post">
+    <h1>留言信息
+		<span>请留下你的信息</span>
+    </h1>
+    <label>
+    	<span>姓名:</span>
+    	<input id="name" type="text" value="{% if not my_message.name == 'bobby' %}bobbyhatest{% else %}hihi{% endif %}" name="name" placeholder="name">
+    	<div></div>
+    </label>
+    <label>
+    	<span>邮箱:</span>
+    	<input id="email" type="text" value="{{ my_message.email }}" name="email" placeholder="email">
+    	<div></div>
+    </label>
+    <label>
+    	<span>联系地址:</span>
+    	<input id="address" type="text" value="{{ my_message.address }}" name="address" placeholder="address">
+    	<div></div>
+    </label>  
+    <label>
+    	<span>留言:</span>
+    	<textarea id="message" name="message" placeholder="message">{{ my_message.message }}</textarea>
+    	<div></div>
+    </label>
+    <label>
+    	<span>&nbsp</span>
+    	<input type="submit" value="提交">
+    </label>
+    {% csrf_token %}
+</form>
+</body>
+</html>
