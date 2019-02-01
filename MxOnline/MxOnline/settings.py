@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Django settings for MxOnline project.
 
@@ -15,7 +16,7 @@ import sys
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(BASE_DIR,'apps'))
-
+sys.path.insert(0, os.path.join(BASE_DIR,'extra_apps'))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.9/howto/deployment/checklist/
 
@@ -88,7 +89,16 @@ DATABASES = {
         'NAME': "mxonline",
         'USER': "root",
         'PASSWORD':"root",
-        'HOST':"127.0.0.1"
+        'HOST':"127.0.0.1",
+        'OPTIONS':{
+            "init_command":"SET sql_mode='STRICT_TRANS_TABLES'",
+# WARNINGS:
+# ?: (mysql.W002) MySQL Strict Mode is not set for database connection 'default'
+# 	HINT: MySQL's Strict Mode fixes many data integrity problems in MySQL,
+# 	such as data truncation upon insertion, by escalating warnings into errors.
+# 	It is strongly recommended you activate it. See: https://docs.djangoproject.com/en/1.11/ref/databases/#mysql-sql-mode
+# mysql健壮性的鬼东西,参照:https://www.jianshu.com/p/bc41a8bf9d9b
+        }
     }
 }
 
