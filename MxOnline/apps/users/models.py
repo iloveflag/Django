@@ -32,8 +32,6 @@ class EmailVerifyRecord(models.Model):
         verbose_name=u"邮箱验证码"
         verbose_name_plural = verbose_name
 
-    def __unicode__(self):
-        return self.code
 
 
 class Banner(models.Model):
