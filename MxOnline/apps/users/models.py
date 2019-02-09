@@ -8,6 +8,7 @@ from django.contrib.auth.models import AbstractUser
 
 
 class UserProfile(AbstractUser):
+    """继承django默认的user"""
     nick_name = models.CharField(max_length=50, verbose_name=u"昵称", default="")
     birday = models.DateField(verbose_name=u"生日", null=True, blank=True)
     gender = models.CharField(max_length=6, choices=(("male",u"男"),("female",u"女")),default="female")
