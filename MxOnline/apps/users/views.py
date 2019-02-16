@@ -8,9 +8,12 @@ from django.contrib.auth.backends import ModelBackend
 from django.db.models import Q
 """class的方法去登录"""
 from django.views.generic.base import View
+from django.contrib.auth.hashers import make_password #密码加密
 
-from .models import UserProfile
-from .forms import LoginForm
+
+from .models import UserProfile, EmailVerifyRecord
+from .forms import LoginForm, RegisterForm,ForgetForm,ModifyForm
+from utils.email_send import send_register_email
 # Create your views here.
 # 弱智的自定义登录class:
 class CustomBackend(ModelBackend):
@@ -23,9 +26,62 @@ class CustomBackend(ModelBackend):
             return  None
 
 """基于类的登录方式"""
+
+class ActiveUserView(View):
+    def get(self, request, active_code):
+        all_records = EmailVerifyRecord.objects.filter(code=active_code)
+        if all_records:
+            for record in all_records:
+                email = record.email
+                user = UserProfile.objects.get(email=email)
+                user.is_active = True
+                user.save()
+        else:
+            return render(request,"active_fail.html")
+        return render(request, 'login.html', )
+
+
+class RegisterView(View):
+    """注册功能的view"""
+    # get方法直接返回页面
+
+    def get(self, request):
+        # 添加验证码
+        register_form = RegisterForm()
+        return render(
+            request, "register.html", {
+                'register_form': register_form})
+
+    def post(self, request):
+        register_form = RegisterForm(request.POST)
+        if register_form.is_valid():
+            user_name = request.POST.get("email", "")
+            if UserProfile.objects.filter(email=user_name):
+                return render(request, "register.html", {"register_form": register_form, "msg": "用户已存在"})
+            pass_word = request.POST.get("password", "")
+            user_profile = UserProfile()
+            user_profile.username = user_name
+            user_profile.email = user_name
+
+            user_profile.is_active = False
+
+            user_profile.password = make_password(pass_word)
+            user_profile.save()
+
+
+            send_register_email(user_name, "register")
+
+            return render(request, "login.html", )
+        else:
+            return render(
+                request, "register.html", {
+                    "register_form": register_form})
+
+
 class LoginView(View):
     def get(self, request):
         return render(request, "login.html", {})
+
     def post(self, request):
         login_form = LoginForm(request.POST)
         if login_form.is_valid():
@@ -39,6 +95,8 @@ class LoginView(View):
                 return render(request, "login.html", {"msg": "用户名或密码错误! "})
         else:
             return render(request, "login.html", {"login_form": login_form})
+
+
 # 基于函数的登录方式,不建议采纳
 # def user_login(request):
 #     if request.method == "POST":
@@ -52,3 +110,49 @@ class LoginView(View):
 #             return render(request, "login.html", {"msg":"用户名或密码错误! "})
 #     elif request.method == "GET":
 #         return render(request, "login.html", {})
+
+
+class ForgetPwdView(View):
+    def get(self,request):
+        forget_form =ForgetForm()
+        return render(request, "forgetpwd.html", {"forget_form":forget_form})
+
+    def post(self,request):
+        forget_form = ForgetForm(request.POST)
+        if forget_form.is_valid():
+            email = request.POST.get("email","")
+            send_register_email(email,"forget")
+            return render(request, "send_success.html", {"forget_form": forget_form})
+        else:
+            return render(request, "forgetpwd.html", {"forget_form": forget_form})
+
+
+class ResetView(View):
+    def get(self, request, active_code):
+        all_records = EmailVerifyRecord.objects.filter(code=active_code)
+        if all_records:
+            for record in all_records:
+                email = record.email
+                return render(request,"password_reset.html",{"email":email})
+        else:
+            return render(request,"active_fail.html")
+        return render(request, 'login.html', )
+
+
+class ModifyPwdView(View):
+    def post(self,request):
+        modify_form = ModifyForm(request.POST)
+        if modify_form.is_valid():
+            pwd1 = request.POST.get("password1", "")
+            pwd2 = request.POST.get("password2", "")
+            email = request.POST.get("email", "")
+            if pwd1 !=pwd2:
+                return render(request,"password_reset.html",{"email":email,"msg":"密码不一致"})
+            user = UserProfile.objects.get(email=email)
+            user.password = make_password(pwd2)
+            user.save()
+
+            return render(request, 'login.html', )
+        else:
+            email = request.POST.get("email", "")
+            return render(request, "password_reset.html", {"email": email, "modify_form":modify_form})
